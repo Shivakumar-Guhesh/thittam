@@ -1,96 +1,129 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/task_model.dart';
 import '../repositories/project_repository.dart';
 
-class ProjectProvider extends ChangeNotifier {
-  final ProjectRepository _repository = ProjectRepository();
+class ProjectState {
+  final List<Project> projects;
+  final Project? selectedProject;
+  final List<TaskItem> tasks;
+  final bool isLoading;
 
-  List<Project> _projects = [];
-  Project? _selectedProject;
-  List<TaskItem> _tasks = [];
-  bool _isLoading = false;
+  const ProjectState({
+    this.projects = const [],
+    this.selectedProject,
+    this.tasks = const [],
+    this.isLoading = false,
+  });
 
-  List<Project> get projects => _projects;
-  Project? get selectedProject => _selectedProject;
-  List<TaskItem> get tasks => _tasks;
-  bool get isLoading => _isLoading;
-
-  /// Loads all projects and defaults to the first one if available.
-  Future<void> loadProjects() async {
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      _projects = await _repository.loadProjects();
-      if (_projects.isNotEmpty && _selectedProject == null) {
-        _selectedProject = _projects.first;
-        await loadTasksForSelectedProject();
-      }
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  /// Switches the active project and loads its corresponding task file.
-  Future<void> selectProject(String projectId) async {
-    try {
-      _selectedProject = _projects.firstWhere((p) => p.id == projectId);
-      await loadTasksForSelectedProject();
-      notifyListeners();
-    } catch (_) {
-      // Project not found fallback
-    }
-  }
-
-  /// Loads tasks for the currently selected project.
-  Future<void> loadTasksForSelectedProject() async {
-    if (_selectedProject == null) {
-      _tasks = [];
-      return;
-    }
-    _tasks = await _repository.loadTasksForProject(_selectedProject!.id);
-    notifyListeners();
-  }
-
-  /// Creates a new project and saves it to projects.json.
-  Future<void> createProject(String name, String description) async {
-    final newProject = Project(name: name, description: description);
-    _projects.add(newProject);
-    await _repository.saveProjects(_projects);
-
-    if (_selectedProject == null) {
-      _selectedProject = newProject;
-      _tasks = [];
-    }
-    notifyListeners();
-  }
-
-  /// Adds a task to the active project and persists it.
-  Future<void> addTask(TaskItem task) async {
-    if (_selectedProject == null) return;
-    _tasks.add(task);
-    await _repository.saveTasksForProject(_selectedProject!.id, _tasks);
-    notifyListeners();
-  }
-
-  /// Updates an existing task and persists changes.
-  Future<void> updateTask(TaskItem updatedTask) async {
-    if (_selectedProject == null) return;
-    final index = _tasks.indexWhere((t) => t.id == updatedTask.id);
-    if (index != -1) {
-      _tasks[index] = updatedTask;
-      await _repository.saveTasksForProject(_selectedProject!.id, _tasks);
-      notifyListeners();
-    }
-  }
-
-  /// Deletes a task from the active project.
-  Future<void> deleteTask(String taskId) async {
-    if (_selectedProject == null) return;
-    _tasks.removeWhere((t) => t.id == taskId);
-    await _repository.saveTasksForProject(_selectedProject!.id, _tasks);
-    notifyListeners();
+  ProjectState copyWith({
+    List<Project>? projects,
+    Project? selectedProject,
+    List<TaskItem>? tasks,
+    bool? isLoading,
+  }) {
+    return ProjectState(
+      projects: projects ?? this.projects,
+      selectedProject: selectedProject ?? this.selectedProject,
+      tasks: tasks ?? this.tasks,
+      isLoading: isLoading ?? this.isLoading,
+    );
   }
 }
+
+class ProjectNotifier extends Notifier<ProjectState> {
+  final ProjectRepository _repository = ProjectRepository();
+
+  @override
+  ProjectState build() {
+    loadProjects();
+    return const ProjectState(isLoading: true);
+  }
+
+  Future<void> loadProjects() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final projects = await _repository.loadProjects();
+      Project? selected = state.selectedProject;
+      List<TaskItem> tasks = state.tasks;
+
+      if (projects.isNotEmpty && selected == null) {
+        selected = projects.first;
+        tasks = await _repository.loadTasksForProject(selected.id);
+      }
+
+      state = state.copyWith(
+        projects: projects,
+        selectedProject: selected,
+        tasks: tasks,
+        isLoading: false,
+      );
+    } catch (_) {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
+  Future<void> selectProject(String projectId) async {
+    try {
+      final selected = state.projects.firstWhere((p) => p.id == projectId);
+      final tasks = await _repository.loadTasksForProject(selected.id);
+      state = state.copyWith(selectedProject: selected, tasks: tasks);
+    } catch (_) {}
+  }
+
+  Future<void> createProject(String name, String description) async {
+    final newProject = Project(name: name, description: description);
+    final updatedProjects = [...state.projects, newProject];
+    await _repository.saveProjects(updatedProjects);
+
+    Project? selected = state.selectedProject;
+    List<TaskItem> tasks = state.tasks;
+
+    if (selected == null) {
+      selected = newProject;
+      tasks = [];
+    }
+
+    state = state.copyWith(
+      projects: updatedProjects,
+      selectedProject: selected,
+      tasks: tasks,
+    );
+  }
+
+  Future<void> addTask(TaskItem task) async {
+    if (state.selectedProject == null) return;
+    final updatedTasks = [...state.tasks, task];
+    await _repository.saveTasksForProject(
+      state.selectedProject!.id,
+      updatedTasks,
+    );
+    state = state.copyWith(tasks: updatedTasks);
+  }
+
+  Future<void> updateTask(TaskItem updatedTask) async {
+    if (state.selectedProject == null) return;
+    final updatedTasks = state.tasks
+        .map((t) => t.id == updatedTask.id ? updatedTask : t)
+        .toList();
+    await _repository.saveTasksForProject(
+      state.selectedProject!.id,
+      updatedTasks,
+    );
+    state = state.copyWith(tasks: updatedTasks);
+  }
+
+  Future<void> deleteTask(String taskId) async {
+    if (state.selectedProject == null) return;
+    final updatedTasks = state.tasks.where((t) => t.id != taskId).toList();
+    await _repository.saveTasksForProject(
+      state.selectedProject!.id,
+      updatedTasks,
+    );
+    state = state.copyWith(tasks: updatedTasks);
+  }
+}
+
+final projectProvider = NotifierProvider<ProjectNotifier, ProjectState>(() {
+  return ProjectNotifier();
+});
