@@ -1,0 +1,89 @@
+// app_sizes.dart
+
+class AppSizes {
+  // --- Screen Breakpoints ---
+  static const double mobileBreakpoint = 600.0;
+  static const double tabletBreakpoint = 1024.0;
+
+  // --- Spacing & Padding ---
+  static const double spaceXXXSmall = 1.0;
+  static const double spaceXXSmall = 4.0;
+  static const double spaceXSmall = 8.0;
+  static const double spaceSmall = 12.0;
+  static const double spaceMedium = 16.0;
+  static const double spaceLarge = 24.0;
+  static const double spaceXLarge = 32.0;
+  static const double spaceXXLarge = 48.0;
+
+  static const double radiusXSmall = 4.0;
+  static const double radiusSmall = 6.0;
+  static const double radiusMedium = 10.0;
+  static const double radiusLarge = 12.0;
+  static const double radiusMax = 999.0;
+
+  // --- Component Dimensions ---
+  static const double appBarHeight = 64.0;
+  static const double buttonHeight = 44.0;
+  static const double inputHeight = 44.0;
+
+  static const double fabSizeLarge = 96.0;
+
+  static const double maxSideBarWidth = 350.0;
+  static const double minSideBarWidth = 200.0;
+  static const double collapsedSideBarWidth = 85.0;
+  static const double sideBarWidthFactor = 0.10;
+
+  static const double maxProfileMenuWidth = 250.0;
+  static const double minProfileMenuWidth = 200.0;
+  static const double profileMenuWidthFactor = 0.25;
+
+  static const double minKpiCardHeight = 100.0;
+  static const double maxKpiCardWidth = 600.0;
+  static const double minKpiCardWidth = 300.0;
+  static const double kpiCardWidthFactor = 0.2;
+
+  static const double minLineChartHeight = 300.0;
+  static const double maxLineChartHeight = 1200.0;
+  static const double minLineChartWidth = 300.0;
+  static const double maxLineChartWidth = 2400.0;
+  static const double lineChartWidthFactor = 0.9;
+  static const double lineChartHeightFactor = 0.3;
+
+  static const double minGroupChartHeight = 450.0;
+  static const double maxGroupChartHeight = 1200.0;
+  static const double minGroupChartWidth = 300.0;
+  static const double maxGroupChartWidth = 1200.0;
+  static const double groupChartWidthFactor = 0.4;
+  static const double groupChartHeightFactor = 0.4;
+
+  static const double pieChartRadius = 40.0;
+  static const double pieChartRadiusTouched = 70.0;
+  static const double pieChartCenterRadiusFactor = 0.3;
+
+  // --- Borders & Strokes ---
+  static const double borderSmall = 1.0;
+  static const double borderMedium = 1.5;
+  static const double borderLarge = 2.0;
+  static const double borderXLarge = 4.0;
+
+  // --- Iconography ---
+  static const double iconXSmall = 14.0;
+  static const double iconSmall = 18.0;
+  static const double iconMedium = 20.0;
+  static const double iconLarge = 28.0;
+
+  // --- Elevation ---
+  static const double elevationMin = 0.0;
+  static const double elevationSmall = 2.0;
+  static const double elevationMedium = 4.0;
+  static const double elevationLarge = 6.0;
+
+  // --- Typography Scale ---
+  static const double fontXSmall = 12.0; // Caption
+  static const double fontSmall = 14.0; // Body
+  static const double fontMedium = 16.0; // Label
+  static const double fontLarge = 20.0; // Title
+  static const double fontXLarge = 24.0; // Display Small
+  static const double fontXXLarge = 36.0; // Display Large
+  static const double fontMax = 60.0; // Display Large
+}
